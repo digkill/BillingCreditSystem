@@ -69,6 +69,11 @@ npm run dev
 npm run lint
 ```
 
+## Documentation
+
+- [Architecture & component wiki](docs/wiki/README.md)
+- Upcoming ADRs under `docs/wiki/adr/`
+
 ## Next Steps
 
 1. **Authentication & Authorisation** – Integrate Keycloak (OIDC) with the frontend and secure Symfony routes (JWT/mTLS between services).
@@ -77,4 +82,3 @@ npm run lint
 4. **Payments & Accounting** – Expand `Payment` aggregates with double-entry ledger support and reconciliation workflows.
 5. **CI/CD Hardening** – Extend GitHub Actions with caching, static analysis gates (phpstan strict, go vet, vitest) and container build pipelines.
 6. **Observability** – Add OpenTelemetry exporters, Prometheus metrics, and structured tracing across services.
-
