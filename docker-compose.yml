@@ -1,0 +1,127 @@
+version: "3.9"
+
+services:
+  crm-api:
+    build:
+      context: ./apps/crm-api
+    volumes:
+      - ./apps/crm-api:/var/www/html:delegated
+      - ./docker/php/conf.d/custom.ini:/usr/local/etc/php/conf.d/custom.ini:ro
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "1"
+      DATABASE_URL: postgresql://crm_api:crm_api@postgres:5432/crm_api?serverVersion=16&charset=utf8
+      MESSENGER_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages
+      REDIS_URL: redis://redis:6379/0
+      TRUSTED_PROXIES: "0.0.0.0/0"
+      TRUSTED_HOSTS: "^crm\\.localhost$"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+
+  crm-worker:
+    build:
+      context: ./apps/crm-api
+    command: php bin/console messenger:consume async -vv --limit=100 --time-limit=3600
+    volumes:
+      - ./apps/crm-api:/var/www/html:delegated
+      - ./docker/php/conf.d/custom.ini:/usr/local/etc/php/conf.d/custom.ini:ro
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "1"
+      DATABASE_URL: postgresql://crm_api:crm_api@postgres:5432/crm_api?serverVersion=16&charset=utf8
+      MESSENGER_TRANSPORT_DSN: amqp://guest:guest@rabbitmq:5672/%2f/messages
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  crm-nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      crm-api:
+        condition: service_started
+    ports:
+      - "8080:80"
+    volumes:
+      - ./apps/crm-api/public:/var/www/html/public:ro
+      - ./docker/nginx/crm.conf:/etc/nginx/conf.d/default.conf:ro
+
+  risk-engine:
+    image: golang:1.22
+    working_dir: /app
+    command: go run ./cmd/risk-engine
+    volumes:
+      - ./apps/risk-engine:/app:delegated
+    environment:
+      POSTGRES_DSN: postgres://risk_engine:risk_engine@postgres:5432/risk_engine?sslmode=disable
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      REDIS_URL: redis://redis:6379/1
+      LOG_LEVEL: info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  web:
+    image: node:20-alpine
+    working_dir: /app
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    volumes:
+      - ./apps/web:/app:delegated
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://crm.localhost/api
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  redis:
+    image: redis:7-alpine
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    command:
+      - start-dev
+      - --http-port=8090
+      - --hostname-strict=false
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8090:8090"
+
+volumes:
+  postgres-data:
