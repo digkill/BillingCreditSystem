@@ -124,6 +124,31 @@ class Payment extends AggregateRoot
         return $this->id;
     }
 
+    public function dueDate(): \DateTimeImmutable
+    {
+        return $this->dueDate;
+    }
+
+    public function expectedAmount(): Money
+    {
+        return $this->expectedAmount;
+    }
+
+    public function paidAmount(): Money
+    {
+        return $this->paidAmount;
+    }
+
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function updatedAt(): \DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
     public function loanId(): Uuid
     {
         return $this->loanId;

@@ -181,6 +181,41 @@ class LoanApplication extends AggregateRoot
         return $this->terms;
     }
 
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function updatedAt(): \DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function submittedAt(): ?\DateTimeImmutable
+    {
+        return $this->submittedAt;
+    }
+
+    public function approvedAt(): ?\DateTimeImmutable
+    {
+        return $this->approvedAt;
+    }
+
+    public function activatedAt(): ?\DateTimeImmutable
+    {
+        return $this->activatedAt;
+    }
+
+    public function closedAt(): ?\DateTimeImmutable
+    {
+        return $this->closedAt;
+    }
+
+    public function rejectedAt(): ?\DateTimeImmutable
+    {
+        return $this->rejectedAt;
+    }
+
     public function schedule(): RepaymentSchedule
     {
         return $this->schedule;

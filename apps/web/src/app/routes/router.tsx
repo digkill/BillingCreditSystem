@@ -1,6 +1,7 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom'
 
-import { DashboardPage } from '@/pages/dashboard'
+import { AdminDashboardPage } from '@/pages/admin'
+import { ClientPortalPage } from '@/pages/client'
 import { MainLayout } from '@/widgets/layout/main-layout'
 
 export const router = createBrowserRouter([
@@ -10,7 +11,15 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <DashboardPage />,
+        element: <Navigate to="/client" replace />,
+      },
+      {
+        path: 'client',
+        element: <ClientPortalPage />,
+      },
+      {
+        path: 'admin',
+        element: <AdminDashboardPage />,
       },
     ],
   },
