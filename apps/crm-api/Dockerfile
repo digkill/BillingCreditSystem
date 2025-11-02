@@ -14,8 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         librabbitmq-dev \
         pkg-config \
     && docker-php-ext-install -j"$(nproc)" intl opcache pdo pdo_pgsql zip \
-    && pecl install redis \
-    && docker-php-ext-enable redis \
+    && pecl install redis amqp \
+    && docker-php-ext-enable redis amqp \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
